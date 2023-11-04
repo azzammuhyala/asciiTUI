@@ -2,7 +2,6 @@ from distutils.core import setup
 
 setup(
     name         = 'asciiTUI',
-    packages     = 'asciiTUI',
     version      = '1.0.0',
     author       = 'azzammuhyala',
     author_email = 'azzammuhyala@gmail.com',
