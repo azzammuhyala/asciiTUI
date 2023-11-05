@@ -7,12 +7,12 @@ Description: This is a library of tools for you to use with your needs
                for an attractive type of terminal (console) display.
 """
 
-# -- importing: time, os, sys -- #
-import time, os, sys
+# -- importing: time, os, re, sys -- #
+import time, os, re, sys
 
 # -- var(s) -- #
-module_use   = 'time, os, sys'
-__version__  = '1.0.0'
+module_use   = 'time, os, re, sys'
+__version__  = '1.0.1'
 __ansi_key   = {
   # - RESET - #
   "reset"     : "\033[0m",
@@ -47,24 +47,20 @@ __ansi_key   = {
 
 # -- class Error(s) -- #
 class CodeStyleEmptyError(Exception):
-  def __init__(self):
-    super().__init__("The style code is empty.")
+  def __init__(self, *message):
+    super().__init__(*message)
 
-class CodeStyleNotFoundError(Exception):
-  def __init__(self, style):
-    super().__init__(f"'{style}' The style code is not found.")
-
-class TypeSizeGet(Exception):
-  def __init__(self, args):
-    super().__init__(f"There is no type as '{args}'.")
+class OptionNotFoundError(Exception):
+  def __init__(self, *message):
+    super().__init__(*message)
 
 class Python2VersionError(Exception):
-  def __init__(self):
-    super().__init__("asciiTUI only works in python 3, not 2")
+  def __init__(self, *message):
+    super().__init__(*message)
 
 # -- Python version checking -- #
 if sys.version_info[0] == 2:
-  raise Python2VersionError
+  raise Python2VersionError("asciiTUI only works in python 3, not 2")
 
 # -- func(s) -- #
 # -- func: removing ansi code '\033' | return True -- #
@@ -78,6 +74,8 @@ Args:
   """
   for code in __ansi_key.values():
     text = text.replace(code, "")
+  ansi_escape_pattern = r'\033\[[0-9;]*[mK]'
+  text = re.sub(ansi_escape_pattern, '', text)
   return text
 
 # -- func: get terminal size | return True -- #
@@ -99,7 +97,7 @@ Args:
   elif get.lower() == 'yx':
     return y, x
   else:
-    raise TypeSizeGet(get)
+    raise OptionNotFoundError(f"There is no type as '{get}'.")
 
 # -- func: make color text terminal | return True -- #
 def colored(text="colored(<Your text>, <color or style>, <add style1>, <add style2>)", style="white"):
@@ -150,14 +148,14 @@ Style Key(s):
   
   try:
     if style == ['']:
-      raise CodeStyleEmptyError()
+      raise CodeStyleEmptyError("The style code is empty.")
     else:
       ansi_main = ""
       for key_style in style:
         ansi_main += __ansi_key[key_style]
       return ansi_main + text + '\033[0m'
   except KeyError:
-    raise CodeStyleNotFoundError(', '.join(style))
+    raise OptionNotFoundError(f"'{', '.join(style)}' The style code is not found.")
 
 # -- func: make a table ascii for terminal | return True -- #
 def table(type='table', headers=(['headers']), data=([['data']]), using_unicode=False, rm_ansi=False):
@@ -172,6 +170,10 @@ Args:
   using_unicode : Performing a return using a unicode table.
   rm_ansi       : Removing ansi code when doing len() or .ljust() calculations.
   """
+  if isinstance(headers, list) and isinstance(data, list):
+    pass
+  else:
+    raise UnboundLocalError("header and data in the form of a list.")
   table_main = ''
   if type.lower() == 'table':
     column_widths = [max(len(remove_ansi(str(item)) if rm_ansi else str(item)) for item in column) for column in zip(headers, *data)]
@@ -267,6 +269,8 @@ Display(s):
       if count >= 4:
         count = 0
     print(text + isdone)
+  else:
+    raise OptionNotFoundError(f"'{type.lower()}' The type is not found.")
 
 # -- func: make justify func for text | return True -- #
 def justify(content='Hello World! - asciiTUI', make='center', width=50, height=50, space=' ', align=False, rm_ansi=False):
