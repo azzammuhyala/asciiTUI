@@ -1,18 +1,26 @@
 """
-======================= file_name: '__init__.py' =======================
+================== file_name : 'asciiTUI/__init__.py' ==================
 ======================= import_name : 'asciiTUI' =======================
-
-Last Update: 04/11/2023 (GMT+7)
-Description: This is a library of tools for you to use with your needs
-               for an attractive type of terminal (console) display.
+                                                                        
+Last Update: 12/11/2023 (GMT+7)                                         
+                                                                        
+Description: This is a library of tools for you to use with your needs  
+               for an attractive type of terminal (console) display.    
+                                                                        
+Information: Type 'print(dir(asciiTUI))' for further functions, then    
+                type 'print(asciiTUI.{func}.__doc__)' for further       
+                      document information of each function             
 """
 
-# -- importing: time, os, re, sys -- #
-import time, os, re, sys
+# -- importing: all: {time, os, re, sys, getpass}, add: {windows: {msvcrt} else: {tty, termios}} -- #
+import time, os, re, sys, getpass
+if sys.platform == 'win32':
+  from msvcrt import getch
+else:
+  import tty, termios
 
 # -- var(s) -- #
-module_use   = 'time, os, re, sys'
-__version__  = '1.0.1'
+__version__  = '1.1.0'
 __ansi_key   = {
   # - RESET - #
   "reset"     : "\033[0m",
@@ -44,6 +52,8 @@ __ansi_key   = {
   "bg_orange" : "\033[48;5;208m",
   "bg_gray"   : "\033[100m"
 }
+module_use   = r'{time, os, re, sys, getpass}, add: {windows: {msvcrt} else: {tty, termios}}'
+lorem_ipsum  = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
 
 # -- class Error(s) -- #
 class CodeStyleEmptyError(Exception):
@@ -73,7 +83,7 @@ Args:
   text : The main text that will remove the ansi code \\033.
   """
   for code in __ansi_key.values():
-    text = text.replace(code, "")
+    text = str(text).replace(code, "")
   ansi_escape_pattern = r'\033\[[0-9;]*[mK]'
   text = re.sub(ansi_escape_pattern, '', text)
   return text
@@ -100,7 +110,7 @@ Args:
     raise OptionNotFoundError(f"There is no type as '{get}'.")
 
 # -- func: make color text terminal | return True -- #
-def colored(text="colored(<Your text>, <color or style>, <add style1>, <add style2>)", style="white"):
+def colored(text="colored(<Your text>, <color or style>)", style="white"):
   """
 return: True
 asciiTUI.colored(text=str, style=str)
@@ -158,46 +168,48 @@ Style Key(s):
     raise OptionNotFoundError(f"'{', '.join(style)}' The style code is not found.")
 
 # -- func: make a table ascii for terminal | return True -- #
-def table(type='table', headers=(['headers']), data=([['data']]), using_unicode=False, rm_ansi=False):
+def table(type='table', headers=(['headers']), data=([['data']]), borders=(['\u2500', '\u2502', '\u250c', '\u2510', '\u2514', '\u2518', '\u252c', '\u2534', '\u251c', '\u2524', '\u253c']), rm_ansi=False):
   """
 return: True
-asciiTUI.table(type=str, headers=list, data=list, using_unicode=bool, rm_ansi=bool)
+asciiTUI.table(type=str, headers=list, data=list, borders=list, rm_ansi=bool)
 
 Args:
-  type          : Table model type ('table' or 'tabulate')
-  headers       : The header list is in the form of a list type. Example: ['index', 'name'] [<col 1>, <col 2>]
-  data          : The data list is in the form of a list type. Example: [['0', 'Michael'], ['1', 'John']] [<row 1>, <row 2>]
-  using_unicode : Performing a return using a unicode table.
-  rm_ansi       : Removing ansi code when doing len() or .ljust() calculations.
+  type    : Table model type (['table', 'table_fancy-grid', 'tabulate'])
+  headers : The header list is in the form of a list type. Example: ['index', 'name'] [<col 1>, <col 2>]
+  data    : The data list is in the form of a list type. Example: [['0', 'Michael'], ['1', 'John']] [<row 1>, <row 2>]
+  borders : Changing borders (['\u2500', '\u2502', '\u250c', '\u2510', '\u2514', '\u2518', '\u252c', '\u2534', '\u251c', '\u2524', '\u253c'])
+  rm_ansi : Removing ansi code when doing len() or .ljust() calculations.
   """
-  if isinstance(headers, list) and isinstance(data, list):
+  if isinstance(headers, list) and isinstance(data, list) and isinstance(borders, list):
     pass
   else:
     raise UnboundLocalError("header and data in the form of a list.")
   table_main = ''
-  if type.lower() == 'table':
+  if (type.lower() == 'table') or (type.lower() == 'table_fancy-grid'):
     column_widths = [max(len(remove_ansi(str(item)) if rm_ansi else str(item)) for item in column) for column in zip(headers, *data)]
-    header_line =  "\u250c" + "\u252c".join("\u2500" * (width + 2) for width in column_widths) + "\u2510\n" if using_unicode else "+" + "+".join("-" * (width + 2) for width in column_widths) + "+\n"
-    header = "\u2502" + "\u2502".join(f" {header.center(width)} " for header, width in zip(headers, column_widths)) + "\u2502\n" if using_unicode else "|" + "|".join(f" {header.center(width)} " for header, width in zip(headers, column_widths)) + "|\n"
+    header_line =  str(borders[2]) + str(borders[6]).join(str(borders[0]) * (width + 2) for width in column_widths) + str(borders[3])+'\n'
+    header = str(borders[1]) + str(borders[1]).join(f" {str(header).center(width)} " for header, width in zip(headers, column_widths)) + str(borders[1])+'\n'
     table_main += header_line
     table_main += header
-    for row in data:
-      row_line = "\u251c" + "\u253c".join("\u2500" * (width + 2) for width in column_widths) + "\u2524\n" if using_unicode else "+" + "+".join("-" * (width + 2) for width in column_widths) + "+\n"
-      row_line_down = "\u2514" + "\u2534".join("\u2500" * (width + 2) for width in column_widths) + "\u2518" if using_unicode else "+" + "+".join("-" * (width + 2) for width in column_widths) + "+"
-      row_content = "\u2502" + "\u2502".join(f" {str(item) + ' ' * (width-len(remove_ansi(str(item)))) if rm_ansi else str(item).ljust(width)} " for item, width in zip(row, column_widths)) + "\u2502\n" if using_unicode else "|" + "|".join(f" {str(item) + ' ' * (width-len(remove_ansi(str(item)))) if rm_ansi else str(item).ljust(width)} " for item, width in zip(row, column_widths)) + "|\n"
-      table_main += row_line
+    for i, row in enumerate(data):
+      row_line = str(borders[8]) + str(borders[10]).join(str(borders[0]) * (width + 2) for width in column_widths) + str(borders[9])+'\n'
+      row_line_down = str(borders[4]) + str(borders[7]).join(str(borders[0]) * (width + 2) for width in column_widths) + str(borders[5])
+      row_content = str(borders[1]) + str(borders[1]).join(f" {str(item) + ' ' * (width-len(remove_ansi(str(item)))) if rm_ansi else str(item).ljust(width)} " for item, width in zip(row, column_widths)) + str(borders[1])+'\n'
+      table_main += (row_line if i == 0 else '') if type.lower() == 'table_fancy-grid' else row_line
       table_main += row_content
     table_main += row_line_down
   elif type.lower() == 'tabulate':
     column_widths = [max(len(remove_ansi(str(header)) if rm_ansi else str(header)), max(len(remove_ansi(str(item)) if rm_ansi else str(item)) for item in col) if col else 0) for header, col in zip(headers, zip(*data))]
-    header_str = " \u2502 ".join([header + ' ' * (width-len(remove_ansi(str(header)))) if rm_ansi else header.ljust(width) for header, width in zip(headers, column_widths)]) if using_unicode else " | ".join([header + ' ' * (width-len(remove_ansi(str(header)))) if rm_ansi else header.ljust(width) for header, width in zip(headers, column_widths)])
+    header_str = (' '+str(borders[1])+' ').join([header + ' ' * (width-len(remove_ansi(str(header)))) if rm_ansi else str(header).ljust(width) for header, width in zip(headers, column_widths)])
     table_main += header_str + '\n'
-    table_main += "\u2500" * len(remove_ansi(header_str) if rm_ansi else header_str) + '\n' if using_unicode else "-" * len(remove_ansi(header_str) if rm_ansi else header_str) + '\n'
+    table_main += str(borders[0]) * len(remove_ansi(header_str) if rm_ansi else header_str) + '\n'
     count = 0
     for row in data:
-      row_str = " \u2502 ".join([item + ' ' * (width-len(remove_ansi(str(item)))) if rm_ansi else str(item).ljust(width) for item, width in zip(row, column_widths)]) if using_unicode else " | ".join([item + ' ' * (width-len(remove_ansi(str(item)))) if rm_ansi else str(item).ljust(width) for item, width in zip(row, column_widths)])
+      row_str = (' '+str(borders[1])+' ').join([item + ' ' * (width-len(remove_ansi(str(item)))) if rm_ansi else str(item).ljust(width) for item, width in zip(row, column_widths)])
       table_main += row_str + ('\n' if count <= len(data)-2 else '')
       count += 1
+  else:
+    raise OptionNotFoundError(f"There is no type as '{type}'.")
   return table_main
 
 # -- func: make animation typing text terminal | return False -- #
@@ -215,23 +227,30 @@ Args:
     time.sleep(speed)
   print()
 
-# -- func: make progress bar ascii terminal | return False -- #
-def progress_bar(type='line', speed=0.1, width=50, clear=True, max=100, bar_progress="#", bar_space=".", bar_box="[]", text="Hello World! - asciiTUI", isdone=" "):
+# -- func: make progress bar ascii terminal | yield True -- #
+def progress_bar(type='line', speed=0.1, width=50, max=100, bar_progress="#", bar_space=".", bar_box="[]", text="Hello World! - asciiTUI", isdone=" "):
   """
-return: False
+yield: True
 asciiTUI.progress_bar(type=str, speed=float, width=int, clear=bool, max=int, bar_progress=str, bar_space=str, bar_box=str, text=str, isdone=str)
 
 Args:
   type         : Type of progress model ('line' or 'circle').
   speed        : Speed of progress.
   width        : Width length of the progress bar (applies to 'line' type).
-  clear        : Select whether to delete bar content or not.
   max          : Maximum progress percentage (applies to 'line' type). If it is in the 'circle' type then it is a progress time limit.
   bar_progress : Progress symbol (valid in 'line' type).
   bar_space    : Space bar symbol (valid in 'line' type).
   bar_box      : Progress symbol box (valid in 'line' type).
   text         : Display text in 'circle' type.
   isdone       : Display done in 'circle' type if is done.
+
+Example use:
+  import asciiTUI
+
+  pbg = asciiTUI.progress_bar(type='line')
+  for i in pbg:
+    print(next(pbg), end='\\r')
+    asciiTUI.time.sleep(0.01)
 
 Display(s):
   progress_bar('line')
@@ -245,8 +264,8 @@ Display(s):
   if 'line' in type.lower():
     total = 100
     progress = 0
-    bar_start = bar_box[:1]
-    bar_end = bar_box[1:]
+    bar_start = bar_box[0]
+    bar_end = bar_box[-1]
     max = int(max)
     width = int(width)
     speed = float(speed)
@@ -256,19 +275,17 @@ Display(s):
       percent = total * (progress / float(total) / 10)
       filled_width = int(width * (progress // 10) // max)
       bar = f'{bar_progress}' * filled_width + f'{bar_space}' * (width - filled_width)
-      print(f"\r{bar_start}{bar}{bar_end} {percent:.1f}%", end="\r") if clear else print(f"{bar_start}{bar}{bar_end} {percent:.1f}%")
-      time.sleep(speed / 10)
+      yield f"\r{bar_start}{bar}{bar_end} {percent:.1f}%"
   elif 'circle' in type.lower():
-    circle_keys = {0: '-', 1:'\\', 2: '|', 3: '/'}
+    circle_keys = {0: '-', 1: '\\', 2: '|', 3: '/'}
     count = 0
     while max >= 0:
-      print(text + circle_keys[count], end='\r') if clear else print(text + circle_keys[count])
+      yield text + circle_keys[count]
       count += 1
       max -= 1
-      time.sleep(speed / 10)
       if count >= 4:
         count = 0
-    print(text + isdone)
+    yield text + isdone
   else:
     raise OptionNotFoundError(f"'{type.lower()}' The type is not found.")
 
@@ -287,57 +304,159 @@ Args:
   align   : Makes text center align (depending on size in height).
   rm_ansi : Removing ansi code when doing len() calculations.
   """
-  content_pieces = []
+  content_lines = content.split('\n')
   content_end = ''
   contents = ''
-  if rm_ansi:
-    if len(remove_ansi(content)) >= width:
-      content_end = str(content[(len(remove_ansi(content)) // width) * width:])
+  content_pieces = []
+  for coline in content_lines:
+    if rm_ansi:
+      if len(remove_ansi(coline)) >= width:
+        content_end = str(coline[(len(remove_ansi(coline)) // width) * width:])
+        start_index = 0
+        while start_index < len(remove_ansi(coline)):
+          if start_index + width <= len(remove_ansi(coline)):
+            content_pieces.append(coline[start_index:start_index + width])
+          start_index += width
+      if 'center' in make.lower():
+        if len(remove_ansi(coline)) <= width:
+          contents += space[0] * ((width - len(remove_ansi(coline))) // 2) + coline + space[0] * ((width - len(remove_ansi(coline))) // 2)
+        else:
+          for item in content_pieces:
+            contents += item + '\n'
+          contents += space[0] * ((width - len(remove_ansi(content_end))) // 2) + content_end + space[0] * ((width - len(remove_ansi(content_end))) // 2)
+      elif 'right' in make.lower():
+        if len(remove_ansi(coline)) <= width:
+          contents += space[0] * (width - len(remove_ansi(coline))) + coline
+        else:
+          for item in content_pieces:
+            contents += item + '\n'
+          contents += space[0] * (width - len(remove_ansi(content_end))) + content_end
+    else:
+      content_end = str(coline[(len(coline) // width) * width:])
       start_index = 0
-      while start_index < len(remove_ansi(content)):
-        if start_index + width <= len(remove_ansi(content)):
-          content_pieces.append(content[start_index:start_index + width])
+      while start_index < len(coline):
+        if start_index + width <= len(coline):
+          content_pieces.append(coline[start_index:start_index + width])
         start_index += width
-    if 'center' in make.lower():
-      if len(remove_ansi(content)) <= width:
-        contents += space[:1] * ((width - len(remove_ansi(content))) // 2) + content + space[:1] * ((width - len(remove_ansi(content))) // 2)
-      else:
-        for item in content_pieces:
-          contents += item + '\n'
-        contents += space[:1] * ((width - len(remove_ansi(content_end))) // 2) + content_end + space[:1] * ((width - len(remove_ansi(content_end))) // 2)
-    elif 'right' in make.lower():
-      if len(remove_ansi(content)) <= width:
-        contents += space[:1] * (width - len(remove_ansi(content))) + content
-      else:
-        for item in content_pieces:
-          contents += item + '\n'
-        contents += space[:1] * (width - len(remove_ansi(content_end))) + content_end
-    if align:
-      return ("\n" * height) + contents
-    else:
-      return contents
+      if 'center' in make.lower():
+        if len(coline) <= width:
+          contents += space[0] * ((width - len(coline)) // 2) + coline + space[0] * ((width - len(coline)) // 2)
+        elif len(coline) >= width:
+          for item in content_pieces:
+            contents += item + '\n'
+          contents += space[0] * ((width - len(content_end)) // 2) + content_end + space[0] * ((width - len(content_end)) // 2)
+      elif 'right' in make.lower():
+        if len(coline) <= width:
+          contents += space[0] * (width - len(coline)) + coline
+        elif len(coline) >= width:
+          for item in content_pieces:
+            contents += item + '\n'
+          contents += space[0] * (width - len(content_end)) + content_end
+  if align:
+    return ("\n" * height) + contents
   else:
-    content_end = str(content[(len(content) // width) * width:])
-    start_index = 0
-    while start_index < len(content):
-      if start_index + width <= len(content):
-        content_pieces.append(content[start_index:start_index + width])
-      start_index += width
-    if 'center' in make.lower():
-      if len(content) <= width:
-        contents += space[:1] * ((width - len(content)) // 2) + content + space[:1] * ((width - len(content)) // 2)
-      elif len(content) >= width:
-        for item in content_pieces:
-          contents += item + '\n'
-        contents += space[:1] * ((width - len(content_end)) // 2) + content_end + space[:1] * ((width - len(content_end)) // 2)
-    elif 'right' in make.lower():
-      if len(content) <= width:
-        contents += space[:1] * (width - len(content)) + content
-      elif len(content) >= width:
-        for item in content_pieces:
-          contents += item + '\n'
-        contents += space[:1] * (width - len(content_end)) + content_end
-    if align:
-      return ("\n" * height) + contents
-    else:
-      return contents
+    return contents
+
+# -- Special module for Windows -- #
+if sys.platform == 'win32':
+
+  # -- func: password input function | return True -- #
+  def pwinput(prompt='', mask='*'):
+    """
+return: True
+asciiTUI.pwinput(prompt=str, mask=str)
+
+Args:
+  prompt : Appearance of prompt or text.
+  mask   : As the character mask displayed.
+    """
+    STR_TYPE = str
+    if not isinstance(prompt, STR_TYPE):
+      raise TypeError(f"Prompt argument must be a str, not {type(prompt).__name__}")
+    if not isinstance(mask, STR_TYPE):
+      raise TypeError(f"Mask argument must be a zero or one character str, not '{type(prompt).__name__}'")
+    if len(mask) > 1:
+      raise ValueError('Mask argument must be a zero or one character str')
+    if mask == '' or sys.stdin is not sys.__stdin__:
+      return getpass.getpass(prompt)
+    enteredPassword = []
+    sys.stdout.write(prompt)
+    sys.stdout.flush()
+    while True:
+      key = ord(getch())
+      if key == 13:
+        sys.stdout.write('\n')
+        return ''.join(enteredPassword)
+      elif key in (8, 127):
+        if len(enteredPassword) > 0:
+          sys.stdout.write('\b \b')
+          sys.stdout.flush()
+          enteredPassword = enteredPassword[:-1]
+      elif 0 <= key <= 31:
+        pass
+      else:
+        char = chr(key)
+        sys.stdout.write(mask)
+        sys.stdout.flush()
+        enteredPassword.append(char)
+
+# -- Special module for MacOS or Linux -- #
+else:
+
+  # -- func: replacement for the getch() function in the msvcrt module | return True -- #
+  def getch():
+    """
+return: True
+asciiTUI.getch() -> None args or parameters
+
+Info:
+  Replacement for the getch() function in the msvcrt module because this library does not support anything other than Windows.
+    """
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+      tty.setraw(sys.stdin.fileno())
+      ch = sys.stdin.read(1)
+    finally:
+      termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
+
+  # -- func: password input function | return True -- #
+  def pwinput(prompt='', mask='*'):
+    """
+return: True
+asciiTUI.pwinput(prompt=str, mask=str)
+
+Args:
+  prompt : Appearance of prompt or text.
+  mask   : As the character mask displayed.
+    """
+    STR_TYPE = str
+    if not isinstance(prompt, STR_TYPE):
+      raise TypeError(f"Prompt argument must be a str, not {type(prompt).__name__}")
+    if not isinstance(mask, STR_TYPE):
+      raise TypeError(f"Mask argument must be a zero or one character str, not '{type(prompt).__name__}'")
+    if len(mask) > 1:
+      raise ValueError('Mask argument must be a zero or one character str')
+    if mask == '' or sys.stdin is not sys.__stdin__:
+      return getpass.getpass(prompt)
+    enteredPassword = []
+    sys.stdout.write(prompt)
+    sys.stdout.flush()
+    while True:
+      key = ord(getch())
+      if key == 13:
+        sys.stdout.write('\n')
+        return ''.join(enteredPassword)
+      elif key in (8, 127):
+        if len(enteredPassword) > 0:
+          sys.stdout.write('\b \b')
+          sys.stdout.flush()
+          enteredPassword = enteredPassword[:-1]
+      elif 0 <= key <= 31:
+        pass
+      else:
+        char = chr(key)
+        sys.stdout.write(mask)
+        sys.stdout.flush()
+        enteredPassword.append(char)
