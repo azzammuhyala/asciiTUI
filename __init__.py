@@ -1,462 +1,624 @@
 """
-================== file_name : 'asciiTUI/__init__.py' ==================
+=================== __file__: 'asciiTUI/__init__.py' ===================
 ======================= import_name : 'asciiTUI' =======================
                                                                         
-Last Update: 12/11/2023 (GMT+7)                                         
+Last Update: 22/12 (December)/2023 <GMT+7>                              
                                                                         
 Description: This is a library of tools for you to use with your needs  
                for an attractive type of terminal (console) display.    
                                                                         
-Information: Type 'print(dir(asciiTUI))' for further functions, then    
-                type 'print(asciiTUI.{func}.__doc__)' for further       
-                      document information of each function             
+Information: Type `print(dir(asciiTUI))` for further functions, then    
+                type `print(asciiTUI.<func>.__doc__)` for further       
+                  document information of each function or full         
+                  documentation or full documentation on PyPI :         
+                        https://pypi.org/project/asciiTUI               
 """
 
-# -- importing: all: {time, os, re, sys, getpass}, add: {windows: {msvcrt} else: {tty, termios}} -- #
-import time, os, re, sys, getpass
-if sys.platform == 'win32':
-  from msvcrt import getch
+# -- importing: all: {os, re, sys, getpass, textwrap}, add: {windows: {msvcrt} else: {tty, termios}} -- #
+import os as _os
+import re as _re
+import sys as _sys
+import getpass as _getpass
+import textwrap as _textwrap
+if _sys.platform == 'win32':
+  from msvcrt import getch as _getch
 else:
-  import tty, termios
+  import tty as _tty
+  import termios as _termios
 
 # -- var(s) -- #
-__version__  = '1.1.0'
-__ansi_key   = {
-  # - RESET - #
-  "reset"     : "\033[0m",
-  # - STYLE - #
-  "bold"      : "\033[1m",
-  "italic"    : "\033[3m",
-  "underline" : "\033[4m",
-  "strike"    : "\033[9m",
-  # - COLOR - #
-  "black"     : "\033[30m",
-  "red"       : "\033[31m",
-  "green"     : "\033[32m",
-  "yellow"    : "\033[33m",
-  "blue"      : "\033[34m",
-  "magenta"   : "\033[35m",
-  "cyan"      : "\033[36m",
-  "white"     : "\033[37m",
-  "orange"    : "\033[38;5;208m",
-  "gray"      : "\033[90m",
-  # - BACKGROUND COLOR  - #
-  "bg_black"  : "\033[40m",
-  "bg_red"    : "\033[41m",
-  "bg_green"  : "\033[42m",
-  "bg_yellow" : "\033[43m",
-  "bg_blue"   : "\033[44m",
-  "bg_magenta": "\033[45m",
-  "bg_cyan"   : "\033[46m",
-  "bg_white"  : "\033[47m",
-  "bg_orange" : "\033[48;5;208m",
-  "bg_gray"   : "\033[100m"
-}
-module_use   = r'{time, os, re, sys, getpass}, add: {windows: {msvcrt} else: {tty, termios}}'
-lorem_ipsum  = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+__version__ = '1.2.7'
+module_use  = r'{os, re, sys, getpass, textwrap}, add: {windows: {msvcrt} else: {tty, termios}}'
+lorem_ipsum = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
 
 # -- class Error(s) -- #
-class CodeStyleEmptyError(Exception):
-  def __init__(self, *message):
-    super().__init__(*message)
-
 class OptionNotFoundError(Exception):
   def __init__(self, *message):
     super().__init__(*message)
 
-class Python2VersionError(Exception):
+class PythonVersionError(Exception):
   def __init__(self, *message):
     super().__init__(*message)
 
 # -- Python version checking -- #
-if sys.version_info[0] == 2:
-  raise Python2VersionError("asciiTUI only works in python 3, not 2")
+if _sys.version_info[0] == 2:
+  raise PythonVersionError("asciiTUI only works in python 3, not 2")
 
 # -- func(s) -- #
-# -- func: removing ansi code '\033' | return True -- #
-def remove_ansi(text):
+# -- func: removing ansi code | return [str] -- #
+def remove_ansi(text:str)->str:
   """
-return: True
-asciiTUI.remove_ansi(text=str)
+return: `str`
+
+Example use:
+  >>> import asciiTUI as tui
+  >>> text = '\\033[32mHello World!\\033[36m'
+  >>> len(text)
+  22
+  >>> len(tui.remove_ansi(text=text))
+  12
 
 Args:
-  text : The main text that will remove the ansi code \\033.
+  `text` : The main text that will remove the ansi code
   """
-  for code in __ansi_key.values():
-    text = str(text).replace(code, "")
-  ansi_escape_pattern = r'\033\[[0-9;]*[mK]'
-  text = re.sub(ansi_escape_pattern, '', text)
+  text = str(text)
+  text = _re.sub(r'\033\[[0-9;]*[mK]', '', text)
+  text = _re.sub(r'\x1b\[[0-9;]*[mK]', '', text)
+  text = _re.sub(r'\x1B\][0-9;]*[mK]', '', text)
+  text = _re.sub(r'\u001b\][0-9;]*[mK]', '', text)
   return text
 
-# -- func: get terminal size | return True -- #
-def terminal_size(get):
+# -- func: get terminal size | return [int] -- #
+def terminal_size(get:str)->int:
   """
-return: True
-asciiTUI.table(get=str)
+return: `int`
+
+Example use:
+  >>> import asciiTUI as tui
+  >>> tui.terminal_size(get='x')
+  120
+  >>> # The numbers above will not match the output results you get. It all depends on the size of your terminal when executed.
+  >>> tui.terminal_size('xy')
+  (120, 30)
 
 Args:
-  get : The type of terminal size you will get. 'x': width, 'y': height.
+  `get` : The type of terminal size you will get. `x`: width, `y`: height
   """
-  x, y = os.get_terminal_size().columns, os.get_terminal_size().lines
-  if get.lower() == 'x':
-    return x
-  elif get.lower() == 'y':
-    return y
-  elif get.lower() == 'xy':
-    return x, y
-  elif get.lower() == 'yx':
-    return y, x
+  get = str(get).lower()
+  x, y = _os.get_terminal_size().columns, _os.get_terminal_size().lines
+  if get == 'x': return x
+  elif get == 'y': return y
+  elif get == 'xy': return x, y
+  elif get == 'yx': return y, x
+  else: raise OptionNotFoundError(f"'{get}' The type (get) is not found.")
+
+# -- func: make color text terminal | return [str] -- #
+def rgb(r=255, g=255, b=255, style='fg')->str:
+  """
+return: `str`
+
+Example use:
+  >>> import asciiTUI as tui
+  >>> print("%sHello %sWorld%s!%s" % (tui.rgb(r=0), tui.rgb(r=24,g=90,b=123), tui.rgb(style='bg'), '\\033[0m'))
+  Hello World!
+  >>> # The resulting output is in the form of RGB colors in general. Style as foreground (fg) or background (bg) type. The resulting color depends on the type of console used.
+
+Args:
+  `r`     : Red value (0-255)
+  `g`     : Green value (0-255)
+  `b`     : Blue value (0-255)
+  `style` : Color style, either `fg` for foreground or `bg` for background
+  """
+  style = str(style).lower()
+  if not (isinstance(r, int) and isinstance(g, int) and isinstance(b, int)):
+    raise TypeError(f"r, g, b is int, and style is str not r:{type(r).__name__}, g:{type(g).__name__}, b:{type(b).__name__}")
+  if ((r < 0) or (r > 255)) or ((g < 0) or (g > 255)) or ((b < 0) or (b > 255)):
+    raise ValueError(f'The values of r, g, b are not up to standard r:{r}, g:{g}, b:{b}')
+
+  if style == 'fg':
+    return f"\u001b[38;2;{r};{g};{b}m"
+  elif style == 'bg':
+    return f"\u001b[48;2;{r};{g};{b}m"
+
   else:
-    raise OptionNotFoundError(f"There is no type as '{get}'.")
+    raise OptionNotFoundError(f"'{style}' The type (style) is not found. Only 'fg' (foreground) or 'bg' (background)")
 
-# -- func: make color text terminal | return True -- #
-def colored(text="colored(<Your text>, <color or style>)", style="white"):
+# -- func: make a table ascii for terminal | return [str] -- #
+def table(headers:list, data:list, typefmt='table', borders=(['\u2500', '\u2502', '\u250c', '\u2510', '\u2514', '\u2518', '\u252c', '\u2534', '\u251c', '\u2524', '\u253c']))->str:
   """
-return: True
-asciiTUI.colored(text=str, style=str)
+return: `str`
+
+Example use:
+  >>> import asciiTUI as tui
+  >>> print(tui.table(
+  ...   headers = ['NUM', 'Name'],
+  ...   data    = [
+  ...               [1, 'Alice'],
+  ...               [2, 'Steve'],
+  ...             ],
+  ...   typefmt = 'table',
+  ...   borders = ['\\u2500', '\\u2502', '\\u250c', '\\u2510', '\\u2514', '\\u2518', '\\u252c', '\\u2534', '\\u251c', '\\u2524', '\\u253c'] # need 11 borders
+  ... ))
+  ┌─────┬───────┐
+  │ NUM │ Name  │
+  ├─────┼───────┤
+  │ 1   │ Alice │
+  ├─────┼───────┤
+  │ 2   │ Steve │
+  └─────┴───────┘
+
+Model types:
+  >>> # 'table' Types of table models in general.
+  ┌─────┬───────┐
+  │ NUM │ Name  │
+  ├─────┼───────┤
+  │ 1   │ Alice │
+  ├─────┼───────┤
+  │ 2   │ Steve │
+  └─────┴───────┘
+  >>> # 'table_fancy-grid' Table model type without rows in the data.
+  ┌─────┬───────┐
+  │ NUM │ Name  │
+  ├─────┼───────┤
+  │ 1   │ Alice │
+  │ 2   │ Steve │
+  └─────┴───────┘
+  >>> # 'tabulate' Tabulate model type with minimal borders.
+  NUM │ Name 
+  ───────────
+  1   │ Alice
+  2   │ Steve
 
 Args:
-  text  : Main string text to change the style type
-  style : Selection of string text style <split: ','. Example: style='black, bg_black'>
-
-Style Key(s):
-{
-  # - RESET - #
-  "reset"
-  # - STYLE - #
-  "bold"
-  "italic"
-  "underline"
-  "strike"
-  # - COLOR - #
-  "black"
-  "red"
-  "green"
-  "yellow"
-  "blue"
-  "magenta"
-  "cyan"
-  "white"
-  "orange"
-  "gray"
-  # - BACKGROUND COLOR - #
-  "bg_black"
-  "bg_red"
-  "bg_green"
-  "bg_yellow"
-  "bg_blue"
-  "bg_magenta"
-  "bg_cyan"
-  "bg_white"
-  "bg_orange"
-  "bg_gray"
-}
+  `headers` : The header list is in the form of a list type. Example: `['NUM', 'Name'] [<col 1>, <col 2>]`
+  `data`    : The data list is in the form of a list type. Example: `[[1, 'Alice'], [2, 'Steve']] [<row 1>, <row 2>]`
+  `typefmt` : Table model type (`table` or `table_fancy-grid` or `tabulate`)
+  `borders` : Changing borders, default: (`['\\u2500', '\\u2502', '\\u250c', '\\u2510', '\\u2514', '\\u2518', '\\u252c', '\\u2534', '\\u251c', '\\u2524', '\\u253c']`)
   """
-  style = style.split(',')
-  for i, itsy in enumerate(style):
-    style[i] = itsy.strip()
-  
-  try:
-    if style == ['']:
-      raise CodeStyleEmptyError("The style code is empty.")
-    else:
-      ansi_main = ""
-      for key_style in style:
-        ansi_main += __ansi_key[key_style]
-      return ansi_main + text + '\033[0m'
-  except KeyError:
-    raise OptionNotFoundError(f"'{', '.join(style)}' The style code is not found.")
+  if not (isinstance(headers, list) and isinstance(data, list) and isinstance(borders, list)):
+    raise TypeError(f"headers, data, borders type is list not headers:{type(headers).__name__}, data:{type(data).__name__}, borders:{type(borders).__name__}")
+  for item in data:
+    if not isinstance(item, list): raise TypeError(f"data type in it must be a list not {type(item).__name__}")
+  if len(borders) != 11:
+    raise ValueError(f'borders length cannot be less or more than 11 not {len(borders)}')
 
-# -- func: make a table ascii for terminal | return True -- #
-def table(type='table', headers=(['headers']), data=([['data']]), borders=(['\u2500', '\u2502', '\u250c', '\u2510', '\u2514', '\u2518', '\u252c', '\u2534', '\u251c', '\u2524', '\u253c']), rm_ansi=False):
-  """
-return: True
-asciiTUI.table(type=str, headers=list, data=list, borders=list, rm_ansi=bool)
-
-Args:
-  type    : Table model type (['table', 'table_fancy-grid', 'tabulate'])
-  headers : The header list is in the form of a list type. Example: ['index', 'name'] [<col 1>, <col 2>]
-  data    : The data list is in the form of a list type. Example: [['0', 'Michael'], ['1', 'John']] [<row 1>, <row 2>]
-  borders : Changing borders (['\u2500', '\u2502', '\u250c', '\u2510', '\u2514', '\u2518', '\u252c', '\u2534', '\u251c', '\u2524', '\u253c'])
-  rm_ansi : Removing ansi code when doing len() or .ljust() calculations.
-  """
-  if isinstance(headers, list) and isinstance(data, list) and isinstance(borders, list):
-    pass
-  else:
-    raise UnboundLocalError("header and data in the form of a list.")
+  typefmt = str(typefmt).lower()
+  headers = [str(item) for item in headers]
+  data = [[str(item) for item in row] for row in data]
+  borders = [str(item)[0] for item in borders]
   table_main = ''
-  if (type.lower() == 'table') or (type.lower() == 'table_fancy-grid'):
-    column_widths = [max(len(remove_ansi(str(item)) if rm_ansi else str(item)) for item in column) for column in zip(headers, *data)]
-    header_line =  str(borders[2]) + str(borders[6]).join(str(borders[0]) * (width + 2) for width in column_widths) + str(borders[3])+'\n'
-    header = str(borders[1]) + str(borders[1]).join(f" {str(header).center(width)} " for header, width in zip(headers, column_widths)) + str(borders[1])+'\n'
+
+  if (typefmt == 'table') or (typefmt == 'table_fancy-grid'):
+    column_widths = [max(len(remove_ansi(item)) for item in column) for column in zip(headers, *data)]
+    header_line =  borders[2] + borders[6].join(borders[0] * (width + 2) for width in column_widths) + borders[3]+'\n'
+    header = borders[1] + borders[1].join(f" {justify(header, width, wrap=False)} " for header, width in zip(headers, column_widths)) + borders[1]+'\n'
     table_main += header_line
     table_main += header
     for i, row in enumerate(data):
-      row_line = str(borders[8]) + str(borders[10]).join(str(borders[0]) * (width + 2) for width in column_widths) + str(borders[9])+'\n'
-      row_line_down = str(borders[4]) + str(borders[7]).join(str(borders[0]) * (width + 2) for width in column_widths) + str(borders[5])
-      row_content = str(borders[1]) + str(borders[1]).join(f" {str(item) + ' ' * (width-len(remove_ansi(str(item)))) if rm_ansi else str(item).ljust(width)} " for item, width in zip(row, column_widths)) + str(borders[1])+'\n'
-      table_main += (row_line if i == 0 else '') if type.lower() == 'table_fancy-grid' else row_line
+      row_line = borders[8] + borders[10].join(borders[0] * (width + 2) for width in column_widths) + borders[9]+'\n'
+      row_line_down = borders[4] + borders[7].join(borders[0] * (width + 2) for width in column_widths) + borders[5]
+      row_content = borders[1] + borders[1].join(f" {item + ' ' * (width-len(remove_ansi(item)))} " for item, width in zip(row, column_widths)) + borders[1]+'\n'
+      table_main += (row_line if i == 0 else '') if typefmt == 'table_fancy-grid' else row_line
       table_main += row_content
     table_main += row_line_down
-  elif type.lower() == 'tabulate':
-    column_widths = [max(len(remove_ansi(str(header)) if rm_ansi else str(header)), max(len(remove_ansi(str(item)) if rm_ansi else str(item)) for item in col) if col else 0) for header, col in zip(headers, zip(*data))]
-    header_str = (' '+str(borders[1])+' ').join([header + ' ' * (width-len(remove_ansi(str(header)))) if rm_ansi else str(header).ljust(width) for header, width in zip(headers, column_widths)])
+
+  elif typefmt == 'tabulate':
+    column_widths = [max(len(remove_ansi(header)), max(len(remove_ansi(item)) for item in col) if col else 0) for header, col in zip(headers, zip(*data))]
+    header_str = (' '+borders[1]+' ').join([header + ' ' * (width-len(remove_ansi(header))) for header, width in zip(headers, column_widths)])
     table_main += header_str + '\n'
-    table_main += str(borders[0]) * len(remove_ansi(header_str) if rm_ansi else header_str) + '\n'
+    table_main += borders[0] * len(remove_ansi(header_str)) + '\n'
     count = 0
     for row in data:
-      row_str = (' '+str(borders[1])+' ').join([item + ' ' * (width-len(remove_ansi(str(item)))) if rm_ansi else str(item).ljust(width) for item, width in zip(row, column_widths)])
+      row_str = (' '+borders[1]+' ').join([item + ' ' * (width-len(remove_ansi(item))) for item, width in zip(row, column_widths)])
       table_main += row_str + ('\n' if count <= len(data)-2 else '')
       count += 1
+
   else:
-    raise OptionNotFoundError(f"There is no type as '{type}'.")
+    raise OptionNotFoundError(f"'{typefmt}' The type (typefmt) is not found.")
+
   return table_main
 
-# -- func: make animation typing text terminal | return False -- #
-def typing(text="Hello World! - asciiTUI", speed=0.1):
+# -- func: make justify func for text | return [str] -- #
+def justify(content:str, width:int, make='center', height=50, fill=' ', align=False, wrap=True)->str:
   """
-return: False
-asciiTUI.typing(text=str, speed=float)
-
-Args:
-  text  : The main text that will be printed with typing animation.
-  speed : Set speed.
-  """
-  for char in text:
-    print(char, end='', flush=True)
-    time.sleep(speed)
-  print()
-
-# -- func: make progress bar ascii terminal | yield True -- #
-def progress_bar(type='line', speed=0.1, width=50, max=100, bar_progress="#", bar_space=".", bar_box="[]", text="Hello World! - asciiTUI", isdone=" "):
-  """
-yield: True
-asciiTUI.progress_bar(type=str, speed=float, width=int, clear=bool, max=int, bar_progress=str, bar_space=str, bar_box=str, text=str, isdone=str)
-
-Args:
-  type         : Type of progress model ('line' or 'circle').
-  speed        : Speed of progress.
-  width        : Width length of the progress bar (applies to 'line' type).
-  max          : Maximum progress percentage (applies to 'line' type). If it is in the 'circle' type then it is a progress time limit.
-  bar_progress : Progress symbol (valid in 'line' type).
-  bar_space    : Space bar symbol (valid in 'line' type).
-  bar_box      : Progress symbol box (valid in 'line' type).
-  text         : Display text in 'circle' type.
-  isdone       : Display done in 'circle' type if is done.
+return: `str`
 
 Example use:
-  import asciiTUI
-
-  pbg = asciiTUI.progress_bar(type='line')
-  for i in pbg:
-    print(next(pbg), end='\\r')
-    asciiTUI.time.sleep(0.01)
-
-Display(s):
-  progress_bar('line')
-  Output:
-  [#########################################] 100.0%
-
-  progress_bar('cicle')
-  Output:
-  Hello World! - asciiTUI-
-  """
-  if 'line' in type.lower():
-    total = 100
-    progress = 0
-    bar_start = bar_box[0]
-    bar_end = bar_box[-1]
-    max = int(max)
-    width = int(width)
-    speed = float(speed)
-    width = width - len(str(max)) - 6
-    for i in range(max * 10):
-      progress += 1
-      percent = total * (progress / float(total) / 10)
-      filled_width = int(width * (progress // 10) // max)
-      bar = f'{bar_progress}' * filled_width + f'{bar_space}' * (width - filled_width)
-      yield f"\r{bar_start}{bar}{bar_end} {percent:.1f}%"
-  elif 'circle' in type.lower():
-    circle_keys = {0: '-', 1: '\\', 2: '|', 3: '/'}
-    count = 0
-    while max >= 0:
-      yield text + circle_keys[count]
-      count += 1
-      max -= 1
-      if count >= 4:
-        count = 0
-    yield text + isdone
-  else:
-    raise OptionNotFoundError(f"'{type.lower()}' The type is not found.")
-
-# -- func: make justify func for text | return True -- #
-def justify(content='Hello World! - asciiTUI', make='center', width=50, height=50, space=' ', align=False, rm_ansi=False):
-  """
-return: True
-asciiTUI.justify(content=str, make=str, width=int, space=str, align=bool, rm_ansi=bool)
+  >>> import asciiTUI as tui
+  >>> print(tui.justify(content=tui.lorem_ipsum, width=50, make='center', height=50, fill=' ', align=False, wrap=True))
+   Lorem Ipsum is simply dummy text of the printing 
+  and typesetting industry. Lorem Ipsum has been the
+    industry's standard dummy text ever since the   
+   1500s, when an unknown printer took a galley of  
+    type and scrambled it to make a type specimen   
+  book. It has survived not only five centuries, but
+      also the leap into electronic typesetting,    
+       remaining essentially unchanged. It was      
+     popularised in the 1960s with the release of   
+   Letraset sheets containing Lorem Ipsum passages, 
+  and more recently with desktop publishing software
+   like Aldus PageMaker including versions of Lorem 
+                        Ipsum.
 
 Args:
-  content : Content string to be justified.
-  make    : Make the string printed with the center (make='center') or to the right (make='right').
-  width   : Set the width size.
-  height  : Set the height size.
-  space   : Space symbol.
-  align   : Makes text center align (depending on size in height).
-  rm_ansi : Removing ansi code when doing len() calculations.
+  `content` : Content string to be justified
+  `width`   : Set the width size
+  `make`    : Make the string printed with the center `center` or to the right `right` or to the left `left`
+  `height`  : Set the height size
+  `fill`    : Fill character
+  `align`   : Makes text center align (depending on size in height)
+  `wrap`    : Word wrapping
   """
+  content, make, fill = map(str, [content, make, fill])
+  fill, make = fill[0], make.lower()
+  align, wrap = map(bool, [align, wrap])
+  if not (isinstance(width, int) or isinstance(height, int)):
+    raise TypeError(f"width, height is int not width:{type(width).__name__}, height:{type(height).__name__}")
+  if width <= 2:
+    return content
+
   content_lines = content.split('\n')
   content_end = ''
   contents = ''
   content_pieces = []
-  for coline in content_lines:
-    if rm_ansi:
-      if len(remove_ansi(coline)) >= width:
-        content_end = str(coline[(len(remove_ansi(coline)) // width) * width:])
-        start_index = 0
-        while start_index < len(remove_ansi(coline)):
-          if start_index + width <= len(remove_ansi(coline)):
-            content_pieces.append(coline[start_index:start_index + width])
-          start_index += width
-      if 'center' in make.lower():
-        if len(remove_ansi(coline)) <= width:
-          contents += space[0] * ((width - len(remove_ansi(coline))) // 2) + coline + space[0] * ((width - len(remove_ansi(coline))) // 2)
-        else:
+
+  def cutting_content(main_text, width):
+    content_pieces = []
+    content_end = str(main_text[(len(main_text) // width) * width:])
+    start_index = 0
+    while start_index < len(main_text):
+      if start_index + width <= len(main_text):
+        content_pieces.append(main_text[start_index:start_index + width])
+      start_index += width
+    return content_pieces, content_end
+
+  for isline, coline in enumerate(content_lines):
+    if len(remove_ansi(coline)) >= width:
+      ctn_list, ctn_end = cutting_content(coline, width)
+      for item in ctn_list:
+        content_pieces.append(item)
+      content_end = ctn_end
+
+    if make == 'center':
+      if (len(remove_ansi(coline)) <= width) and (not wrap):
+        extra_space = width - len(remove_ansi(coline))
+        left_padding = extra_space // 2
+        right_padding = extra_space - left_padding
+        contents += fill * left_padding + coline + fill * right_padding + ('\n' if isline < len(content_lines)-1 else '')
+      else:
+        if not wrap:
           for item in content_pieces:
             contents += item + '\n'
-          contents += space[0] * ((width - len(remove_ansi(content_end))) // 2) + content_end + space[0] * ((width - len(remove_ansi(content_end))) // 2)
-      elif 'right' in make.lower():
-        if len(remove_ansi(coline)) <= width:
-          contents += space[0] * (width - len(remove_ansi(coline))) + coline
+          extra_space = width - len(remove_ansi(content_end))
+          left_padding = extra_space // 2
+          right_padding = extra_space - left_padding
+          contents += fill * left_padding + content_end + fill * right_padding
         else:
+          wraped = _textwrap.wrap(coline, width)
+          for i, item_wrap in enumerate(wraped):
+            extra_space = width - len(remove_ansi(item_wrap))
+            left_padding = extra_space // 2
+            right_padding = extra_space - left_padding
+            contents += fill * left_padding + item_wrap + fill * right_padding + ('\n' if (i < len(wraped)-1) or (isline < len(content_lines)-1) else '')
+      content_pieces.clear()
+
+    elif make == 'right':
+      if (len(remove_ansi(coline)) <= width) and (not wrap):
+        contents += fill * (width - len(remove_ansi(coline))) + coline + ('\n' if isline < len(content_lines)-1 else '')
+      else:
+        if not wrap:
           for item in content_pieces:
             contents += item + '\n'
-          contents += space[0] * (width - len(remove_ansi(content_end))) + content_end
+          contents += fill * (width - len(remove_ansi(content_end))) + content_end
+        else:
+          wraped = _textwrap.wrap(coline, width)
+          for i, item_wrap in enumerate(wraped):
+            contents += fill * (width - len(remove_ansi(item_wrap))) + item_wrap + ('\n' if (i < len(wraped)-1) or (isline < len(content_lines)-1) else '')
+      content_pieces.clear()
+
+    elif make == 'left':
+      if (len(remove_ansi(coline)) <= width) and (not wrap):
+        contents += coline + fill * (width - len(remove_ansi(coline))) + ('\n' if isline < len(content_lines)-1 else '')
+      else:
+        if not wrap:
+          for item in content_pieces:
+            contents += item + '\n'
+          contents += content_end + fill * (width - len(remove_ansi(content_end)))
+        else:
+          wraped = _textwrap.wrap(coline, width)
+          for i, item_wrap in enumerate(wraped):
+            contents += item_wrap + fill * (width - len(remove_ansi(item_wrap))) + ('\n' if (i < len(wraped)-1) or (isline < len(content_lines)-1) else '')
+      content_pieces.clear()
+
     else:
-      content_end = str(coline[(len(coline) // width) * width:])
-      start_index = 0
-      while start_index < len(coline):
-        if start_index + width <= len(coline):
-          content_pieces.append(coline[start_index:start_index + width])
-        start_index += width
-      if 'center' in make.lower():
-        if len(coline) <= width:
-          contents += space[0] * ((width - len(coline)) // 2) + coline + space[0] * ((width - len(coline)) // 2)
-        elif len(coline) >= width:
-          for item in content_pieces:
-            contents += item + '\n'
-          contents += space[0] * ((width - len(content_end)) // 2) + content_end + space[0] * ((width - len(content_end)) // 2)
-      elif 'right' in make.lower():
-        if len(coline) <= width:
-          contents += space[0] * (width - len(coline)) + coline
-        elif len(coline) >= width:
-          for item in content_pieces:
-            contents += item + '\n'
-          contents += space[0] * (width - len(content_end)) + content_end
+      raise OptionNotFoundError(f"'{make}' The type (make) is not found.")
+
   if align:
     return ("\n" * height) + contents
   else:
     return contents
 
-# -- Special module for Windows -- #
-if sys.platform == 'win32':
+# -- class -- #
+# -- func class: splits multiple command arguments on a string | return [None, str] -- #
+class Init_cmd_split:
 
-  # -- func: password input function | return True -- #
-  def pwinput(prompt='', mask='*'):
+  def __init__(self, esc_char='\\', quotes_char='"', ln_char=';', backslash_char='\\', param_char=' ')->None:
     """
-return: True
-asciiTUI.pwinput(prompt=str, mask=str)
+Functions (method): `split_args`, `split_ln`
+return: `None`
+
+Example use:
+  >>> import asciiTUI as tui
+  >>> cs = tui.Init_cmd_split(esc_char='\\\\', quotes_char='"', ln_char=';', backslash_char='\\\\', param_char=' ')
+  >>> # Other method documentation is in each method..
 
 Args:
-  prompt : Appearance of prompt or text.
-  mask   : As the character mask displayed.
+  `esc_char`       : Escape character
+  `quotes_char`    : Quote character
+  `ln_char`        : Line character. To separate and create rows
+  `backslash_char` : Backslash character
+  `param_char`     : Parameter character. To separate parameters
     """
-    STR_TYPE = str
-    if not isinstance(prompt, STR_TYPE):
-      raise TypeError(f"Prompt argument must be a str, not {type(prompt).__name__}")
-    if not isinstance(mask, STR_TYPE):
-      raise TypeError(f"Mask argument must be a zero or one character str, not '{type(prompt).__name__}'")
+    self.esc_char, self.quotes_char, self.ln_char, self.backslash_char, self.param_char = map(str, [esc_char, quotes_char, ln_char, backslash_char, param_char])
+    if (len(self.esc_char) != 1) or (len(self.quotes_char) != 1) or (len(self.ln_char) != 1) or (len(self.backslash_char) != 1) or (len(self.param_char) != 1):
+      raise ValueError("All characters only consist of 1 character")
+
+  def split_args(self, cmd:str) -> list:
+    """
+return: `list`
+
+Example use:
+  >>> command = 'pip install asciiTUI; echo "Hello World!\\""; py'
+  >>> cs.split_args(cmd=command)
+  [['pip', 'install', 'asciiTUI'], ['echo', 'Hello World!"'], ['py']]
+
+Args:
+  `cmd` : main command string
+    """
+    cmd = str(cmd)
+    result = []
+    in_quotes = False
+    current_cmd = ''
+    params = []
+    escape_char = False
+
+    for char in cmd:
+      if char == self.esc_char and not escape_char:
+        escape_char = True
+      elif char == self.quotes_char and not escape_char:
+        in_quotes = not in_quotes
+      elif char == self.ln_char and not in_quotes:
+        if current_cmd or params:
+          result.append(params + [current_cmd])
+          current_cmd = ''
+          params = []
+      elif char == self.param_char and not in_quotes:
+        if current_cmd:
+          params.append(current_cmd)
+          current_cmd = ''
+      else:
+        if escape_char and char == self.backslash_char:
+          current_cmd += char
+          escape_char = False
+        else:
+          current_cmd += char
+          escape_char = False
+
+    if current_cmd or params:
+      result.append(params + [current_cmd])
+
+    return result
+
+  def split_ln(self, cmd:str) -> list:
+    """
+return: `list`
+
+Example use:
+  >>> command = 'pip install asciiTUI; echo "Hello World!\\""; py'
+  >>> cs.split_ln(cmd=command)
+  ['pip install asciiTUI', 'echo "Hello World!""', 'py']
+
+Args:
+  `cmd` : main command string
+    """
+    cmd = str(cmd)
+    result = []
+    in_quotes = False
+    current_cmd = ''
+    escape_char = False
+
+    for char in cmd:
+      if char == self.esc_char and not escape_char:
+        escape_char = True
+      elif char == self.quotes_char and not escape_char:
+        in_quotes = not in_quotes
+        current_cmd += char
+      elif char == self.ln_char and not in_quotes:
+        if current_cmd:
+          result.append(current_cmd.strip())
+          current_cmd = ''
+      else:
+        current_cmd += char
+        escape_char = False
+
+    if current_cmd:
+      result.append(current_cmd.strip())
+
+    return result
+
+# -- func class: make progress bar ascii terminal | return [None, str] -- #
+class Init_progress_bar:
+  def __init__(self, typefmt='simple-box', width=50, maxp=100, showpercent=True, bar_borders=["#", ".", "[", "]"])->None:
+    """
+Functions (method): `strbar`
+return: `None`
+
+Example use:
+  >>> import asciiTUI as tui
+  >>> pb = tui.Init_progress_bar(typefmt='simple-box', width=50, maxp=100, showpercent=True, bar_borders=["#", ".", "[", "]"])
+  >>> # Other method documentation is in each method..
+
+Args:
+  `typefmt`     : The model type (`simple-box` or `simple line`)
+  `width`       : Set width size
+  `maxp`        : Set max percent and progress
+  `showpercent` : Displays the percent figure on progress
+  `bar_borders` : Borders bar
+    """
+    if not (isinstance(width, int) or isinstance(maxp, int) or isinstance(bar_borders, list)):
+      raise TypeError(f"width, maxp is int not width:{type(width).__name__}, maxp:{type(maxp).__name__}")
+    if len(bar_borders) != 4:
+      raise ValueError(f'bar_borders length cannot be less or more than 4 not {len(bar_borders)}')
+    self.showpercent = bool(showpercent)
+    self.typefmt = str(typefmt).lower()
+    self.maxp, self.width = map(int, [maxp, width])
+    self.bar_borders = [str(item) for item in bar_borders]
+
+  def strbar(self, progress:int|float)->str:
+    """
+return: `str`
+
+Example use:
+  >>> print(pb.strbar(progress=12.4)) # 12.4%
+  [#####....................................] 12.4%
+
+Model types:
+  >>> # 'simple-box' Simple progress box model
+  [#########################################] 100.0%
+  >>> # 'simple-line' Simple progress line model
+  ########################################### 100.0%
+
+Args:
+  `progress` : Current percent progress
+    """
+    if not (isinstance(progress, int) or isinstance(progress, float)):
+      raise TypeError(f"progress is (int or float) not progress:{type(progress).__name__}")
+    if self.width < len(str(self.maxp)) + 7:
+      return f"{progress:.1f}%"
+
+    bar = lambda w: self.bar_borders[0] * int(w * progress // self.maxp) + self.bar_borders[1] * (w - int(w * progress // self.maxp))
+
+    if self.typefmt == 'simple-box':
+      w = self.width - len(str(self.maxp)) - 6 if self.showpercent else self.width - 2
+      return f"{self.bar_borders[2]}{bar(w)}{self.bar_borders[3]} {progress:.1f}%" if self.showpercent else self.bar_borders[2]+bar(w)+self.bar_borders[3]
+
+    elif self.typefmt == 'simple-line':
+      w = self.width - len(str(self.maxp)) - 4 if self.showpercent else self.width
+      return f"{bar(w)} {progress:.1f}%" if self.showpercent else bar(w)
+
+    else:
+      raise OptionNotFoundError(f"'{self.typefmt}' The type is not found.")
+
+# -- Special module for Windows -- #
+if _sys.platform == 'win32':
+
+  # -- func: password input function | return [str] -- #
+  def pwinput(prompt='', mask='*')->str:
+    """
+return: `str`
+
+Example use:
+  >>> import asciiTUI as tui
+  >>> password = tui.pwinput(prompt='Password: ', mask='*'); print(password)
+  Password: ***********
+  Hello World
+
+Args:
+  `prompt` : Appearance of prompt or text.
+  `mask`   : As the character mask displayed.
+    """
+    prompt, mask = map(str, [prompt, mask])
     if len(mask) > 1:
       raise ValueError('Mask argument must be a zero or one character str')
-    if mask == '' or sys.stdin is not sys.__stdin__:
-      return getpass.getpass(prompt)
+    if mask == '' or _sys.stdin is not _sys.__stdin__:
+      return _getpass.getpass(prompt)
     enteredPassword = []
-    sys.stdout.write(prompt)
-    sys.stdout.flush()
+    _sys.stdout.write(prompt)
+    _sys.stdout.flush()
     while True:
-      key = ord(getch())
+      key = ord(_getch())
       if key == 13:
-        sys.stdout.write('\n')
+        _sys.stdout.write('\n')
         return ''.join(enteredPassword)
       elif key in (8, 127):
         if len(enteredPassword) > 0:
-          sys.stdout.write('\b \b')
-          sys.stdout.flush()
+          _sys.stdout.write('\b \b')
+          _sys.stdout.flush()
           enteredPassword = enteredPassword[:-1]
       elif 0 <= key <= 31:
         pass
       else:
         char = chr(key)
-        sys.stdout.write(mask)
-        sys.stdout.flush()
+        _sys.stdout.write(mask)
+        _sys.stdout.flush()
         enteredPassword.append(char)
 
 # -- Special module for MacOS or Linux -- #
 else:
 
-  # -- func: replacement for the getch() function in the msvcrt module | return True -- #
-  def getch():
+  # -- func: replacement for the getch() function in the msvcrt module | return [str] -- #
+  def getch()->str:
     """
-return: True
-asciiTUI.getch() -> None args or parameters
+return: `str`
+
+Example use:
+  >>> import asciiTUI as tui
+  >>> tui.getch() # none args or parameters
+  'S'
 
 Info:
-  Replacement for the getch() function in the msvcrt module because this library does not support anything other than Windows.
+  Replacement for the `getch()` function in the msvcrt module because this library does not support anything other than Windows.
     """
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
+    fd = _sys.stdin.fileno()
+    old_settings = _termios.tcgetattr(fd)
     try:
-      tty.setraw(sys.stdin.fileno())
-      ch = sys.stdin.read(1)
+      _tty.setraw(_sys.stdin.fileno())
+      ch = _sys.stdin.read(1)
     finally:
-      termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+      _termios.tcsetattr(fd, _termios.TCSADRAIN, old_settings)
     return ch
 
-  # -- func: password input function | return True -- #
-  def pwinput(prompt='', mask='*'):
+  # -- func: password input function | return [str] -- #
+  def pwinput(prompt='', mask='*')->str:
     """
-return: True
-asciiTUI.pwinput(prompt=str, mask=str)
+return: `str`
+
+Example use:
+  >>> import asciiTUI as tui
+  >>> password = tui.pwinput(prompt='Password: ', mask='*'); print(password)
+  Password: ***********
+  Hello World
 
 Args:
-  prompt : Appearance of prompt or text.
-  mask   : As the character mask displayed.
+  `prompt` : Appearance of prompt or text.
+  `mask`   : As the character mask displayed.
     """
-    STR_TYPE = str
-    if not isinstance(prompt, STR_TYPE):
-      raise TypeError(f"Prompt argument must be a str, not {type(prompt).__name__}")
-    if not isinstance(mask, STR_TYPE):
-      raise TypeError(f"Mask argument must be a zero or one character str, not '{type(prompt).__name__}'")
+    prompt, mask = map(str, [prompt, mask])
     if len(mask) > 1:
       raise ValueError('Mask argument must be a zero or one character str')
-    if mask == '' or sys.stdin is not sys.__stdin__:
-      return getpass.getpass(prompt)
+    if mask == '' or _sys.stdin is not _sys.__stdin__:
+      return _getpass.getpass(prompt)
     enteredPassword = []
-    sys.stdout.write(prompt)
-    sys.stdout.flush()
+    _sys.stdout.write(prompt)
+    _sys.stdout.flush()
     while True:
       key = ord(getch())
       if key == 13:
-        sys.stdout.write('\n')
+        _sys.stdout.write('\n')
         return ''.join(enteredPassword)
       elif key in (8, 127):
         if len(enteredPassword) > 0:
-          sys.stdout.write('\b \b')
-          sys.stdout.flush()
+          _sys.stdout.write('\b \b')
+          _sys.stdout.flush()
           enteredPassword = enteredPassword[:-1]
       elif 0 <= key <= 31:
         pass
       else:
         char = chr(key)
-        sys.stdout.write(mask)
-        sys.stdout.flush()
+        _sys.stdout.write(mask)
+        _sys.stdout.flush()
         enteredPassword.append(char)
+
+# test functions
+if __name__ == '__main__':
+  pass
