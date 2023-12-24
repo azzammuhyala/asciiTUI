@@ -1,18 +1,22 @@
-"""
+"""```
 =================== __file__: 'asciiTUI/__init__.py' ===================
 ======================= import_name : 'asciiTUI' =======================
+================= Create By: Azzammuhyala | Indonesian =================
                                                                         
-Last Update: 22/12 (December)/2023 <GMT+7>                              
+Last Update: 23/12 (December)/2023 <GMT+7>                              
+Version    : 1.2.8                                                      
                                                                         
 Description: This is a library of tools for you to use with your needs  
                for an attractive type of terminal (console) display.    
                                                                         
-Information: Type `print(dir(asciiTUI))` for further functions, then    
-                type `print(asciiTUI.<func>.__doc__)` for further       
+Information: Type 'print(dir(asciiTUI))' for further functions, then    
+                type 'print(asciiTUI.<func>.__doc__)' for further       
                   document information of each function or full         
                   documentation or full documentation on PyPI :         
                         https://pypi.org/project/asciiTUI               
-"""
+                                  or on GitHub:                         
+                    https://github.com/azzammuhyala/asciiTUI/          
+```"""
 
 # -- importing: all: {os, re, sys, getpass, textwrap}, add: {windows: {msvcrt} else: {tty, termios}} -- #
 import os as _os
@@ -27,7 +31,7 @@ else:
   import termios as _termios
 
 # -- var(s) -- #
-__version__ = '1.2.7'
+__version__ = '1.2.8'
 module_use  = r'{os, re, sys, getpass, textwrap}, add: {windows: {msvcrt} else: {tty, termios}}'
 lorem_ipsum = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
 
@@ -78,8 +82,14 @@ Example use:
   >>> tui.terminal_size(get='x')
   120
   >>> # The numbers above will not match the output results you get. It all depends on the size of your terminal when executed.
-  >>> tui.terminal_size('xy')
+  >>> tui.terminal_size(get='xy')
   (120, 30)
+  >>> # or
+  >>> x, y = tui.terminal_size(get='xy')
+  >>> print(x)
+  120
+  >>> print(y)
+  30
 
 Args:
   `get` : The type of terminal size you will get. `x`: width, `y`: height
@@ -123,101 +133,6 @@ Args:
   else:
     raise OptionNotFoundError(f"'{style}' The type (style) is not found. Only 'fg' (foreground) or 'bg' (background)")
 
-# -- func: make a table ascii for terminal | return [str] -- #
-def table(headers:list, data:list, typefmt='table', borders=(['\u2500', '\u2502', '\u250c', '\u2510', '\u2514', '\u2518', '\u252c', '\u2534', '\u251c', '\u2524', '\u253c']))->str:
-  """
-return: `str`
-
-Example use:
-  >>> import asciiTUI as tui
-  >>> print(tui.table(
-  ...   headers = ['NUM', 'Name'],
-  ...   data    = [
-  ...               [1, 'Alice'],
-  ...               [2, 'Steve'],
-  ...             ],
-  ...   typefmt = 'table',
-  ...   borders = ['\\u2500', '\\u2502', '\\u250c', '\\u2510', '\\u2514', '\\u2518', '\\u252c', '\\u2534', '\\u251c', '\\u2524', '\\u253c'] # need 11 borders
-  ... ))
-  ┌─────┬───────┐
-  │ NUM │ Name  │
-  ├─────┼───────┤
-  │ 1   │ Alice │
-  ├─────┼───────┤
-  │ 2   │ Steve │
-  └─────┴───────┘
-
-Model types:
-  >>> # 'table' Types of table models in general.
-  ┌─────┬───────┐
-  │ NUM │ Name  │
-  ├─────┼───────┤
-  │ 1   │ Alice │
-  ├─────┼───────┤
-  │ 2   │ Steve │
-  └─────┴───────┘
-  >>> # 'table_fancy-grid' Table model type without rows in the data.
-  ┌─────┬───────┐
-  │ NUM │ Name  │
-  ├─────┼───────┤
-  │ 1   │ Alice │
-  │ 2   │ Steve │
-  └─────┴───────┘
-  >>> # 'tabulate' Tabulate model type with minimal borders.
-  NUM │ Name 
-  ───────────
-  1   │ Alice
-  2   │ Steve
-
-Args:
-  `headers` : The header list is in the form of a list type. Example: `['NUM', 'Name'] [<col 1>, <col 2>]`
-  `data`    : The data list is in the form of a list type. Example: `[[1, 'Alice'], [2, 'Steve']] [<row 1>, <row 2>]`
-  `typefmt` : Table model type (`table` or `table_fancy-grid` or `tabulate`)
-  `borders` : Changing borders, default: (`['\\u2500', '\\u2502', '\\u250c', '\\u2510', '\\u2514', '\\u2518', '\\u252c', '\\u2534', '\\u251c', '\\u2524', '\\u253c']`)
-  """
-  if not (isinstance(headers, list) and isinstance(data, list) and isinstance(borders, list)):
-    raise TypeError(f"headers, data, borders type is list not headers:{type(headers).__name__}, data:{type(data).__name__}, borders:{type(borders).__name__}")
-  for item in data:
-    if not isinstance(item, list): raise TypeError(f"data type in it must be a list not {type(item).__name__}")
-  if len(borders) != 11:
-    raise ValueError(f'borders length cannot be less or more than 11 not {len(borders)}')
-
-  typefmt = str(typefmt).lower()
-  headers = [str(item) for item in headers]
-  data = [[str(item) for item in row] for row in data]
-  borders = [str(item)[0] for item in borders]
-  table_main = ''
-
-  if (typefmt == 'table') or (typefmt == 'table_fancy-grid'):
-    column_widths = [max(len(remove_ansi(item)) for item in column) for column in zip(headers, *data)]
-    header_line =  borders[2] + borders[6].join(borders[0] * (width + 2) for width in column_widths) + borders[3]+'\n'
-    header = borders[1] + borders[1].join(f" {justify(header, width, wrap=False)} " for header, width in zip(headers, column_widths)) + borders[1]+'\n'
-    table_main += header_line
-    table_main += header
-    for i, row in enumerate(data):
-      row_line = borders[8] + borders[10].join(borders[0] * (width + 2) for width in column_widths) + borders[9]+'\n'
-      row_line_down = borders[4] + borders[7].join(borders[0] * (width + 2) for width in column_widths) + borders[5]
-      row_content = borders[1] + borders[1].join(f" {item + ' ' * (width-len(remove_ansi(item)))} " for item, width in zip(row, column_widths)) + borders[1]+'\n'
-      table_main += (row_line if i == 0 else '') if typefmt == 'table_fancy-grid' else row_line
-      table_main += row_content
-    table_main += row_line_down
-
-  elif typefmt == 'tabulate':
-    column_widths = [max(len(remove_ansi(header)), max(len(remove_ansi(item)) for item in col) if col else 0) for header, col in zip(headers, zip(*data))]
-    header_str = (' '+borders[1]+' ').join([header + ' ' * (width-len(remove_ansi(header))) for header, width in zip(headers, column_widths)])
-    table_main += header_str + '\n'
-    table_main += borders[0] * len(remove_ansi(header_str)) + '\n'
-    count = 0
-    for row in data:
-      row_str = (' '+borders[1]+' ').join([item + ' ' * (width-len(remove_ansi(item))) for item, width in zip(row, column_widths)])
-      table_main += row_str + ('\n' if count <= len(data)-2 else '')
-      count += 1
-
-  else:
-    raise OptionNotFoundError(f"'{typefmt}' The type (typefmt) is not found.")
-
-  return table_main
-
 # -- func: make justify func for text | return [str] -- #
 def justify(content:str, width:int, make='center', height=50, fill=' ', align=False, wrap=True)->str:
   """
@@ -252,9 +167,9 @@ Args:
   content, make, fill = map(str, [content, make, fill])
   fill, make = fill[0], make.lower()
   align, wrap = map(bool, [align, wrap])
-  if not (isinstance(width, int) or isinstance(height, int)):
+  if not (isinstance(width, int) and isinstance(height, int)):
     raise TypeError(f"width, height is int not width:{type(width).__name__}, height:{type(height).__name__}")
-  if width <= 2:
+  if width < 1:
     return content
 
   content_lines = content.split('\n')
@@ -337,6 +252,106 @@ Args:
     return ("\n" * height) + contents
   else:
     return contents
+
+# -- func: make a table ascii for terminal | return [str] -- #
+def table(headers:list, data:list, typefmt='table', tjust:list=['center', 'left'], borders:list=['\u2500', '\u2502', '\u250c', '\u2510', '\u2514', '\u2518', '\u252c', '\u2534', '\u251c', '\u2524', '\u253c'])->str:
+  """
+return: `str`
+
+Example use:
+  >>> import asciiTUI as tui
+  >>> print(tui.table(
+  ...   headers = ['NUM', 'Name'],
+  ...   data    = [
+  ...               [1, 'Alice'],
+  ...               [2, 'Steve'],
+  ...             ],
+  ...   typefmt = 'table',
+  ...   tjust   = ['center', 'left'],
+  ...   borders = ['\\u2500', '\\u2502', '\\u250c', '\\u2510', '\\u2514', '\\u2518', '\\u252c', '\\u2534', '\\u251c', '\\u2524', '\\u253c'] # need 11 borders
+  ... ))
+  ┌─────┬───────┐
+  │ NUM │ Name  │
+  ├─────┼───────┤
+  │ 1   │ Alice │
+  ├─────┼───────┤
+  │ 2   │ Steve │
+  └─────┴───────┘
+
+Model types:
+  >>> # 'table' Types of table models in general.
+  ┌─────┬───────┐
+  │ NUM │ Name  │
+  ├─────┼───────┤
+  │ 1   │ Alice │
+  ├─────┼───────┤
+  │ 2   │ Steve │
+  └─────┴───────┘
+  >>> # 'table_fancy-grid' Table model type without rows in the data.
+  ┌─────┬───────┐
+  │ NUM │ Name  │
+  ├─────┼───────┤
+  │ 1   │ Alice │
+  │ 2   │ Steve │
+  └─────┴───────┘
+  >>> # 'tabulate' Tabulate model type with minimal borders.
+  NUM │ Name 
+  ───────────
+  1   │ Alice
+  2   │ Steve
+
+Args:
+  `headers` : The header list is in the form of a list type. Example: `['NUM', 'Name'] [<col 1>, <col 2>]`
+  `data`    : The data list is in the form of a list type. Example: `[[1, 'Alice'], [2, 'Steve']] [<row 1>, <row 2>]`
+  `typefmt` : Table model type (`table` or `table_fancy-grid` or `tabulate`)
+  `tjust`   : Justify the layout of headers and data (`center` or `right` or `left`). (using `justify()` function). Index: `[<make:headers>, <make:data>]`
+  `borders` : Changing borders, default: (`['\\u2500', '\\u2502', '\\u250c', '\\u2510', '\\u2514', '\\u2518', '\\u252c', '\\u2534', '\\u251c', '\\u2524', '\\u253c']`)
+  """
+  if not (isinstance(headers, list) and isinstance(data, list) and isinstance(tjust, list) and isinstance(borders, list)):
+    raise TypeError(f"headers, data, borders type is list not headers:{type(headers).__name__}, data:{type(data).__name__}, borders:{type(borders).__name__}")
+  for item in data:
+    if not isinstance(item, list): raise TypeError(f"data type in it must be a list not {type(item).__name__}")
+  if len(tjust) != 2:
+    raise ValueError(f"tjust length cannot be less or more than 2 not {len(tjust)}")
+  if len(borders) != 11:
+    raise ValueError(f'borders length cannot be less or more than 11 not {len(borders)}')
+
+  typefmt = str(typefmt).lower()
+  headers = [str(item) for item in headers]
+  data = [[str(item) for item in row] for row in data]
+  tjust = [str(item) for item in tjust]
+  borders = [str(item)[0] for item in borders]
+  table_main = ''
+
+  if (typefmt == 'table') or (typefmt == 'table_fancy-grid'):
+    column_widths = [max(len(remove_ansi(item)) for item in column) for column in zip(headers, *data)]
+    header_line =  borders[2] + borders[6].join(borders[0] * (width + 2) for width in column_widths) + borders[3]+'\n'
+    header = borders[1] + borders[1].join(f" {justify(header, width, tjust[0], wrap=False)} " for header, width in zip(headers, column_widths)) + borders[1]+'\n'
+    table_main += header_line
+    table_main += header
+    for i, row in enumerate(data):
+      row_line = borders[8] + borders[10].join(borders[0] * (width + 2) for width in column_widths) + borders[9]+'\n'
+      row_line_down = borders[4] + borders[7].join(borders[0] * (width + 2) for width in column_widths) + borders[5]
+      row_content = borders[1] + borders[1].join(f" {justify(item, width, tjust[1], wrap=False)} " for item, width in zip(row, column_widths)) + borders[1]+'\n'
+      table_main += (row_line if i == 0 else '') if typefmt == 'table_fancy-grid' else row_line
+      table_main += row_content
+    table_main += row_line_down
+
+  elif typefmt == 'tabulate':
+    column_widths = [max(len(remove_ansi(header)), max(len(remove_ansi(item)) for item in col) if col else 0) for header, col in zip(headers, zip(*data))]
+    header_str = f' {borders[1]} '.join([justify(header, width, tjust[0], wrap=False) for header, width in zip(headers, column_widths)])
+    table_main += header_str + '\n'
+    table_main += borders[0] * len(remove_ansi(header_str)) + '\n'
+    count = 0
+    for row in data:
+      row_str = f' {borders[1]} '.join([justify(item, width, tjust[1], wrap=False) for item, width in zip(row, column_widths)])
+      table_main += row_str + ('\n' if count <= len(data)-2 else '')
+      count += 1
+
+  else:
+    raise OptionNotFoundError(f"'{typefmt}' The type (typefmt) is not found.")
+
+  return table_main
 
 # -- class -- #
 # -- func class: splits multiple command arguments on a string | return [None, str] -- #
@@ -448,7 +463,7 @@ Args:
 
 # -- func class: make progress bar ascii terminal | return [None, str] -- #
 class Init_progress_bar:
-  def __init__(self, typefmt='simple-box', width=50, maxp=100, showpercent=True, bar_borders=["#", ".", "[", "]"])->None:
+  def __init__(self, typefmt='simple-box', width=50, maxp=100, showpercent=True, bar_borders:list=["#", ".", "[", "]"])->None:
     """
 Functions (method): `strbar`
 return: `None`
@@ -465,7 +480,7 @@ Args:
   `showpercent` : Displays the percent figure on progress
   `bar_borders` : Borders bar
     """
-    if not (isinstance(width, int) or isinstance(maxp, int) or isinstance(bar_borders, list)):
+    if not (isinstance(width, int) and isinstance(maxp, int) and isinstance(bar_borders, list)):
       raise TypeError(f"width, maxp is int not width:{type(width).__name__}, maxp:{type(maxp).__name__}")
     if len(bar_borders) != 4:
       raise ValueError(f'bar_borders length cannot be less or more than 4 not {len(bar_borders)}')
