@@ -41,7 +41,7 @@ Libary usage - Functions and Class
 
 remove_ansi
 -----------
-The `remove ansi()` function is used to remove or clean existing ansi escape codes \\033, \\x1b, and others and return the cleaned text. As usage:
+The `remove_ansi()` function is used to remove or clean existing ansi escape codes \\033, \\x1b, and others and return the cleaned text. As usage:
 ```pycon
 >>> text = '\033[32mHello World!\033[36m'
 >>> len(text) # check length
@@ -69,7 +69,6 @@ You can directly get x and y in one function with `get='xy'` or `get='yx'` as us
 120
 >>> print(y)
 30
->>>
 ```
 Args:
 -   `get` (required) (type: str[auto]) : The type of terminal size you will get. `x`: width, `y`: height
@@ -95,75 +94,6 @@ Raises:
 -   `TypeError` : If type `r, g, b` is not `int`
 -   `ValueError` : If `r, g, b` is one of the values less than 0 and more than 255
 -   `OptionNotFoundError` : If `style` option is not found
-
-table
------
-The `table()` function is used to create an art ASCII table with headers and data in list form. As usage:
-```pycon
->>> print(tui.table(
-...   headers = ['NUM', 'Name'],
-...   data    = [
-...               [1, 'Alice'],
-...               [2, 'Steve'],
-...             ],
-...   typefmt  = 'table',
-...   borders = ['\u2500', '\u2502', '\u250c', '\u2510', '\u2514', '\u2518', '\u252c', '\u2534', '\u251c', '\u2524', '\u253c'] # need 11 borders
-... ))
-┌─────┬───────┐
-│ NUM │ Name  │
-├─────┼───────┤
-│ 1   │ Alice │
-├─────┼───────┤
-│ 2   │ Steve │
-└─────┴───────┘
-```
-If you experience problems with the console displaying borders, you can change the borders as follows:
-`borders=['-', '|', '+', '+', '+', '+', '+', '+', '+', '+', '+']`
-Output:
-```shell
-+-----+-------+
-| NUM | Name  |
-+-----+-------+
-| 1   | Alice |
-+-----+-------+
-| 2   | Steve |
-+-----+-------+
-```
-There are 3 types of table displays, namely `table`, `table_fancy-grid`, `tabulate`, here are some displays of each type:
-```shell
-typefmt='table'
-┌─────┬───────┐
-│ NUM │ Name  │
-├─────┼───────┤
-│ 1   │ Alice │
-├─────┼───────┤
-│ 2   │ Steve │
-└─────┴───────┘
-
-typefmt='table_fancy-grid'
-┌─────┬───────┐
-│ NUM │ Name  │
-├─────┼───────┤
-│ 1   │ Alice │
-│ 2   │ Steve │
-└─────┴───────┘
-
-typefmt='tabulate'
-NUM │ Name 
-───────────
-1   │ Alice
-2   │ Steve
-```
-Args:
--   `headers` (required) (type: list[None]) : The header list is in the form of a list type. Example: `['NUM', 'Name'] [<col 1>, <col 2>]`
--   `data` (requared) (type: (list[None] values> list[None]) ) : The data list is in the form of a list type. Example: `[[1, 'Alice'], [2, 'Steve']] [<row 1>, <row 2>]`
--   `typefmt` (default: 'table') (type: str[auto]) : Table model type (`table` or `table_fancy-grid` or `tabulate`)
--   `borders` (default: ['\\u2500', '\\u2502', '\\u250c', '\\u2510', '\\u2514', '\\u2518', '\\u252c', '\\u2534', '\\u251c', '\\u2524', '\\u253c']) (type: list[None]) : Changing borders
-
-Raises:
--   `TypeError` : If the `header, data, borders` type is not a list
--   `ValueError` : If the contents of the `borders` list are less or more than 11
--   `OptionNotFoundError` : If `typefmt` option is not found
 
 justify
 -------
@@ -252,6 +182,77 @@ Raises:
 -   `TypeError` : If `width, height` are not `int`
 -   `OptionNotFoundError` : If `typefmt` option is not found
 
+table
+-----
+The `table()` function is used to create an art ASCII table with headers and data in list form. As usage:
+```pycon
+>>> print(tui.table(
+...   headers = ['NUM', 'Name'],
+...   data    = [
+...               [1, 'Alice'],
+...               [2, 'Steve'],
+...             ],
+...   typefmt = 'table',
+...   tjust   = ['center', 'left'],
+...   borders = ['\u2500', '\u2502', '\u250c', '\u2510', '\u2514', '\u2518', '\u252c', '\u2534', '\u251c', '\u2524', '\u253c'] # need 11 borders
+... ))
+┌─────┬───────┐
+│ NUM │ Name  │
+├─────┼───────┤
+│ 1   │ Alice │
+├─────┼───────┤
+│ 2   │ Steve │
+└─────┴───────┘
+```
+If you experience problems with the console displaying borders, you can change the borders as follows:
+`borders=['-', '|', '+', '+', '+', '+', '+', '+', '+', '+', '+']`
+Output:
+```shell
++-----+-------+
+| NUM | Name  |
++-----+-------+
+| 1   | Alice |
++-----+-------+
+| 2   | Steve |
++-----+-------+
+```
+There are 3 types of table displays, namely `table`, `table_fancy-grid`, `tabulate`, here are some displays of each type:
+```shell
+typefmt='table'
+┌─────┬───────┐
+│ NUM │ Name  │
+├─────┼───────┤
+│ 1   │ Alice │
+├─────┼───────┤
+│ 2   │ Steve │
+└─────┴───────┘
+
+typefmt='table_fancy-grid'
+┌─────┬───────┐
+│ NUM │ Name  │
+├─────┼───────┤
+│ 1   │ Alice │
+│ 2   │ Steve │
+└─────┴───────┘
+
+typefmt='tabulate'
+NUM │ Name 
+───────────
+1   │ Alice
+2   │ Steve
+```
+Args:
+-   `headers` (required) (type: list[None]) : The header list is in the form of a list type. Example: `['NUM', 'Name'] [<col 1>, <col 2>]`
+-   `data` (requared) (type: (list[None] values> list[None]) ) : The data list is in the form of a list type. Example: `[[1, 'Alice'], [2, 'Steve']] [<row 1>, <row 2>]`
+-   `typefmt` (default: 'table') (type: str[auto]) : Table model type (`table` or `table_fancy-grid` or `tabulate`)
+-   `tjust` (default: ['center', 'left']) (type: list[None]) : Justify the layout of headers and data (`center` or `right` or `left`). (using `justify()` function). Index: `[<make:headers>, <make:data>]`
+-   `borders` (default: ['\\u2500', '\\u2502', '\\u250c', '\\u2510', '\\u2514', '\\u2518', '\\u252c', '\\u2534', '\\u251c', '\\u2524', '\\u253c']) (type: list[None]) : Changing borders
+
+Raises:
+-   `TypeError` : If the `header, data, tjust, borders` type is not a list
+-   `ValueError` : If the contents of the `borders, tjust` list are less or more than borders:11, tjust:2
+-   `OptionNotFoundError` : If `typefmt` option is not found
+
 Init_cmd_split
 --------------
 The `Init_cmd_split()` class is an init character used to split command line arguments separated by delimiters defined in this class, such as escape characters, quotes, line breaks, and other special characters. As usage:
@@ -266,10 +267,10 @@ The `Init_cmd_split()` class is an init character used to split command line arg
 >>> command = 'pip install asciiTUI; echo "Hello World!\\""; py' # main command
 ```
 Args:
--   `esc_char` (default: '\\') (type: str[auto]) : Escape character
+-   `esc_char` (default: '\\\\') (type: str[auto]) : Escape character
 -   `quotes_char` (default: '"') (type: str[auto]) : Quote character
 -   `ln_char` (default: ';') (type: str[auto]) : Line character. To separate and create rows
--   `backslash_char` (default: '\\') (type: str[auto]) : Backslash character
+-   `backslash_char` (default: '\\\\') (type: str[auto]) : Backslash character
 -   `param_char` (default: ' ') (type: str[auto]) : Parameter character. To separate parameters
 
 Functions (method):
@@ -372,8 +373,9 @@ If you are using Python version 2
 CHANGE LOG
 ==========
 
-1.2.7
+1.2.8
 -----
 -   Updated justify function
+-   Updated table function
 -   Bugs fixed
 -   Documentation updates
