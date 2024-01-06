@@ -3,8 +3,8 @@
 ======================= import_name : 'asciiTUI' =======================
 ================= Create By: Azzammuhyala | Indonesian =================
                                                                         
-Last Update: 23/12 (December)/2023 <GMT+7>                              
-Version    : 1.2.8                                                      
+Last Update: 06/01 (January)/2024 <GMT+7>                               
+Version    : 1.2.9                                                      
                                                                         
 Description: This is a library of tools for you to use with your needs  
                for an attractive type of terminal (console) display.    
@@ -31,7 +31,7 @@ else:
   import termios as _termios
 
 # -- var(s) -- #
-__version__ = '1.2.8'
+__version__ = '1.2.9'
 module_use  = r'{os, re, sys, getpass, textwrap}, add: {windows: {msvcrt} else: {tty, termios}}'
 lorem_ipsum = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
 
@@ -50,7 +50,7 @@ if _sys.version_info[0] == 2:
 
 # -- func(s) -- #
 # -- func: removing ansi code | return [str] -- #
-def remove_ansi(text:str)->str:
+def remove_ansi(text:str) -> str:
   """
 return: `str`
 
@@ -73,7 +73,7 @@ Args:
   return text
 
 # -- func: get terminal size | return [int] -- #
-def terminal_size(get:str)->int:
+def terminal_size(get:str) -> int:
   """
 return: `int`
 
@@ -103,7 +103,12 @@ Args:
   else: raise OptionNotFoundError(f"'{get}' The type (get) is not found.")
 
 # -- func: make color text terminal | return [str] -- #
-def rgb(r=255, g=255, b=255, style='fg')->str:
+def rgb(
+    r:int=255,
+    g:int=255,
+    b:int=255,
+    style:str='fg'
+  ) -> str:
   """
 return: `str`
 
@@ -134,13 +139,21 @@ Args:
     raise OptionNotFoundError(f"'{style}' The type (style) is not found. Only 'fg' (foreground) or 'bg' (background)")
 
 # -- func: make justify func for text | return [str] -- #
-def justify(content:str, width:int, make='center', height=50, fill=' ', align=False, wrap=True)->str:
+def justify(
+    content:str,
+    width:int,
+    make:str='center',
+    fill:str=' ',
+    height:int=50,
+    align:bool=False,
+    wrap:bool=True
+  ) -> str:
   """
 return: `str`
 
 Example use:
   >>> import asciiTUI as tui
-  >>> print(tui.justify(content=tui.lorem_ipsum, width=50, make='center', height=50, fill=' ', align=False, wrap=True))
+  >>> print(tui.justify(content=tui.lorem_ipsum, width=50, make='center', fill=' ', height=50, align=False, wrap=True))
    Lorem Ipsum is simply dummy text of the printing 
   and typesetting industry. Lorem Ipsum has been the
     industry's standard dummy text ever since the   
@@ -159,8 +172,8 @@ Args:
   `content` : Content string to be justified
   `width`   : Set the width size
   `make`    : Make the string printed with the center `center` or to the right `right` or to the left `left`
-  `height`  : Set the height size
   `fill`    : Fill character
+  `height`  : Set the height size
   `align`   : Makes text center align (depending on size in height)
   `wrap`    : Word wrapping
   """
@@ -254,7 +267,25 @@ Args:
     return contents
 
 # -- func: make a table ascii for terminal | return [str] -- #
-def table(headers:list, data:list, typefmt='table', tjust:list=['center', 'left'], borders:list=['\u2500', '\u2502', '\u250c', '\u2510', '\u2514', '\u2518', '\u252c', '\u2534', '\u251c', '\u2524', '\u253c'])->str:
+def table(
+    headers:list,
+    data:list[list],
+    typefmt:str='table',
+    tjust:list=['center', 'left'],
+    borders:list=[
+      '\u2500',
+      '\u2502',
+      '\u250c',
+      '\u2510',
+      '\u2514',
+      '\u2518',
+      '\u252c',
+      '\u2534',
+      '\u251c',
+      '\u2524',
+      '\u253c'
+    ]
+  ) -> str:
   """
 return: `str`
 
@@ -354,10 +385,16 @@ Args:
   return table_main
 
 # -- class -- #
-# -- func class: splits multiple command arguments on a string | return [None, str] -- #
+# -- func class: splits multiple command arguments on a string | return [None, list, list[list]] -- #
 class Init_cmd_split:
 
-  def __init__(self, esc_char='\\', quotes_char='"', ln_char=';', backslash_char='\\', param_char=' ')->None:
+  def __init__(self,
+                esc_char:str='\\',
+                quotes_char:str='"',
+                ln_char:str=';',
+                backslash_char:str='\\',
+                param_char:str=' '
+              ) -> None:
     """
 Functions (method): `split_args`, `split_ln`
 return: `None`
@@ -378,12 +415,12 @@ Args:
     if (len(self.esc_char) != 1) or (len(self.quotes_char) != 1) or (len(self.ln_char) != 1) or (len(self.backslash_char) != 1) or (len(self.param_char) != 1):
       raise ValueError("All characters only consist of 1 character")
 
-  def split_args(self, cmd:str) -> list:
+  def split_args(self, cmd:str) -> list[list]:
     """
-return: `list`
+return: `list[list]`
 
 Example use:
-  >>> command = 'pip install asciiTUI; echo "Hello World!\\""; py'
+  >>> command = r'pip install asciiTUI; echo "Hello World!\\""; py'
   >>> cs.split_args(cmd=command)
   [['pip', 'install', 'asciiTUI'], ['echo', 'Hello World!"'], ['py']]
 
@@ -429,9 +466,9 @@ Args:
 return: `list`
 
 Example use:
-  >>> command = 'pip install asciiTUI; echo "Hello World!\\""; py'
+  >>> command = r'pip install asciiTUI; echo "Hello World!\\""; py'
   >>> cs.split_ln(cmd=command)
-  ['pip install asciiTUI', 'echo "Hello World!""', 'py']
+  ['pip install asciiTUI', 'echo "Hello World!\\\\""', 'py']
 
 Args:
   `cmd` : main command string
@@ -453,6 +490,8 @@ Args:
           result.append(current_cmd.strip())
           current_cmd = ''
       else:
+        if char == self.quotes_char and escape_char:
+          current_cmd += self.esc_char
         current_cmd += char
         escape_char = False
 
@@ -463,7 +502,18 @@ Args:
 
 # -- func class: make progress bar ascii terminal | return [None, str] -- #
 class Init_progress_bar:
-  def __init__(self, typefmt='simple-box', width=50, maxp=100, showpercent=True, bar_borders:list=["#", ".", "[", "]"])->None:
+  def __init__(self,
+                typefmt:str='simple-box',
+                width:int=50,
+                maxp:int=100,
+                showpercent:bool=True,
+                bar_borders:list=[
+                  "#",
+                  ".",
+                  "[",
+                  "]"
+                ]
+              ) -> None:
     """
 Functions (method): `strbar`
 return: `None`
@@ -489,7 +539,7 @@ Args:
     self.maxp, self.width = map(int, [maxp, width])
     self.bar_borders = [str(item) for item in bar_borders]
 
-  def strbar(self, progress:int|float)->str:
+  def strbar(self, progress:int|float) -> str:
     """
 return: `str`
 
@@ -528,7 +578,7 @@ Args:
 if _sys.platform == 'win32':
 
   # -- func: password input function | return [str] -- #
-  def pwinput(prompt='', mask='*')->str:
+  def pwinput(prompt:str='', mask:str='*') -> str:
     """
 return: `str`
 
@@ -572,7 +622,7 @@ Args:
 else:
 
   # -- func: replacement for the getch() function in the msvcrt module | return [str] -- #
-  def getch()->str:
+  def getch() -> str:
     """
 return: `str`
 
@@ -594,7 +644,7 @@ Info:
     return ch
 
   # -- func: password input function | return [str] -- #
-  def pwinput(prompt='', mask='*')->str:
+  def pwinput(prompt:str='', mask:str='*') -> str:
     """
 return: `str`
 
