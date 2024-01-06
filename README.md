@@ -103,8 +103,8 @@ The `justify()` function is used to load string text to be in the middle or on t
 ...   content=tui.lorem_ipsum,
 ...   width=50,
 ...   make='center',
-...   height=50,
 ...   fill=' ',
+...   height=50,
 ...   align=False,
 ...   wrap=True
 ... ))
@@ -173,8 +173,8 @@ Args:
 -   `content` (required) (type: str[auto]) : Content string to be justified
 -   `width` (required) (type: int[None]) : Set the width size
 -   `make` (default: 'center') (type: str[auto]) : Make the string printed with the center `center` or to the right `right` or to the left `left`
--   `height` (default: 50) (type: int[None]) : Set the height size
 -   `fill` (default: ' ') (type: str[auto]) : Fill character
+-   `height` (default: 50) (type: int[None]) : Set the height size
 -   `align` (default: False) (type: bool[auto]) : Makes text center align (depending on size in height)
 -   `wrap` (default: True) (type: bool[auto]) : Word wrapping
 
@@ -264,7 +264,7 @@ The `Init_cmd_split()` class is an init character used to split command line arg
 ...   backslash_char='\\',
 ...   param_char=' '
 ... )
->>> command = 'pip install asciiTUI; echo "Hello World!\\""; py' # main command
+>>> command = r'pip install asciiTUI; echo "Hello World!\""; py' # main command
 ```
 Args:
 -   `esc_char` (default: '\\\\') (type: str[auto]) : Escape character
@@ -290,7 +290,7 @@ split_ln
 This method will separate only rows in list form as usage:
 ```pycon
 >>> cs.split_ln(cmd=command)
-['pip install asciiTUI', 'echo "Hello World!""', 'py']
+['pip install asciiTUI', 'echo "Hello World!\""', 'py']
 ```
 Args:
 -   `cmd` (required) (type: str[auto]) : Main command string
@@ -373,9 +373,8 @@ If you are using Python version 2
 CHANGE LOG
 ==========
 
-1.2.8
+1.2.9
 -----
--   Updated justify function
--   Updated table function
--   Bugs fixed
+-   Fix justify function
+-   Fix Init_cmd_split
 -   Documentation updates
