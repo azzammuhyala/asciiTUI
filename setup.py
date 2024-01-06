@@ -5,7 +5,7 @@ with open('README.md', 'r', encoding='utf8') as README:
 
 setup(
     name         = 'asciiTUI',
-    version      = '1.2.8',
+    version      = '1.2.9',
     author       = 'azzammuhyala',
     author_email = 'azzammuhyala@gmail.com',
     description  = 'This is a library of tools for you to use with your needs for an attractive type of terminal (console) display.',
